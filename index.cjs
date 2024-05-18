@@ -22,12 +22,14 @@ const corsOptions = {
    optionSuccessStatus: 200,
 };
 
+console.log('test before server');
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME
 });
+console.log('test after server');
 
 app.use(cors(corsOptions));
 
@@ -107,4 +109,4 @@ app.listen(port || 3001, () => {
   console.log(`server started at http://localhost:${port || 3001}`);
 });
 
-export default app
+export default app;
