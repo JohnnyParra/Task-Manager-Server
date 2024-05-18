@@ -39,7 +39,7 @@ router.put('/', upload.single('avatar'), async function (req, res) {
           console.log("Image deleted")
         }
 
-        const blobName = `task-manager/${file.originalname}-${new Date().getTime()}`
+        const blobName = `task-manager/${new Date().getTime()}-${file.originalname}`
         const blob = await put(blobName, file.buffer, {
           access: 'public'
         })
