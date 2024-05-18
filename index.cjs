@@ -65,13 +65,13 @@ app.use("/", authenticateRoute);
 app.use(async function verifyJwt(req, res, next) {
   // console.log(req.headers.authorization)
   if (!req.headers.authorization) {
-    res.json('Invalid authorization, no authorization headers');
+    return res.status(401).json({error: 'Invalid authorization, no authorization headers'});
   }
 
   const [scheme, token] = req.headers.authorization.split(' ');
 
   if (scheme !== 'Bearer') {
-    res.json('Invalid authorization, invalid authorization scheme');
+    return res.status(401).json({error: 'Invalid authorization, invalid authorization scheme'});
   }
 
   try {
@@ -103,8 +103,8 @@ app.use("/group", groupRoute);
 app.use("/profile", profileRoute);
 
 // Start the Express server
-app.listen(port, () => {
-  console.log(`server started at http://localhost:${port}`);
+app.listen(port || 3001, () => {
+  console.log(`server started at http://localhost:${port || 3001}`);
 });
 
 export default app
