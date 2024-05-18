@@ -17,7 +17,7 @@ const app = express();
 const port = process.env.PORT; // default port to listen
 
 const corsOptions = {
-   origin: '*', 
+   origin: 'https://jp-task-manager.netlify.app', 
    credentials: true,  // access-control-allow-credentials:true
    optionSuccessStatus: 200,
 };
@@ -106,3 +106,5 @@ app.use("/profile", profileRoute);
 app.listen(port, () => {
   console.log(`server started at http://localhost:${port}`);
 });
+
+export default app

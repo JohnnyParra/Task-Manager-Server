@@ -3,13 +3,7 @@ const express = require("express");
 const multer = require('multer');
 const bcrypt = require('bcrypt');
 const router = express.Router();
-
-const storage = multer.diskStorage({
-  destination: './public/avatars',
-  filename: (req, file, cb) => {
-    cb(null, `${new Date().getTime()}-${file.originalname}`);
-  }
-})
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage: storage,
@@ -19,7 +13,7 @@ router.put('/', upload.single('avatar'), async function (req, res) {
   const [scheme, token] = req.headers.authorization.split(' ');
   const user = jwt.verify(token, process.env.JWT_KEY)
   const file = req.file;
-  const imageURL = `http://localhost:3000/public/avatars/${file?.filename}`;
+  let imageURL;
   console.log('post updated: ',req.body);
 
   try {
@@ -28,14 +22,38 @@ router.put('/', upload.single('avatar'), async function (req, res) {
     const compare = await bcrypt.compare(req.body.password, dbPassword);
 
     if(compare){
+
+      if(file) {
+        try {
+          const [image] = await req.db.query(`
+          SELECT avatar FROM users
+          WHERE id = ${user.userId}
+          `)
+          if (image[0].avatar) {
+            await del(image[0].avatar)
+          }
+        } catch (err) {
+          console.log("delete image error: ", err);
+        } finally {
+          console.log("Image deleted")
+        }
+
+        const blobName = `${file.originalname}-${new Date().getTime()}`
+        const blob = await put(blobName, file.buffer, {
+          access: 'public'
+        })
+        imageURL = blob;
+      }
+
       const [avatar] = await req.db.query(`
       UPDATE users
-      SET avatar = :avatar, email = :email, name = :name
+      SET avatar = :avatar, avatar_metadata = :avatar_metadata email = :email, name = :name
       WHERE id = ${user.userId}`, 
       {
         name: req.body.name,
         email: req.body.email,
-        avatar: file === undefined ? dbUser.avatar : imageURL
+        avatar: file === undefined ? dbUser.avatar : imageURL.url,
+        avatar_metadata: file === undefined ? dbUser.avatar_metadata : JSON.stringify(imageURL)
       });
     res.json({Success: true})
     } else{
