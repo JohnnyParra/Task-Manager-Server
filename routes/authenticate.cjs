@@ -15,7 +15,6 @@ router.post('/register', async function (req, res) {
     await bcrypt.hash(req.body.password, 10).then(async hash => {
       try {
         console.log('HASHED PASSWORD', hash);
-        const date_created = new Date().getTime().toString();
         const [user] = await req.db.query(`
           INSERT INTO users (name, email, password, date_created)
           VALUES (:name, :email, :password, ${date_created});
@@ -35,8 +34,6 @@ router.post('/register', async function (req, res) {
           { 
             userId: user.insertId,
             name: userInfo[0].name,
-            email: userInfo[0].email,
-            date_created: date_created
           },
           process.env.JWT_KEY
         );
@@ -68,8 +65,6 @@ router.post('/authenticate', async function (req, res) {
       const payload = {
         userId: user.id,
         name: user.name,
-        email: user.email,
-        date_created: user.date_created,
       }
       
       const encodedUser = jwt.sign(payload, process.env.JWT_KEY);
@@ -81,6 +76,26 @@ router.post('/authenticate', async function (req, res) {
     
   } catch (err) {
     console.log('Error in /authenticate', err)
+  }
+});
+
+router.post('/autoLogin', async function (req, res) {
+  if (!req.headers.authorization) {
+    res.json('Invalid authorization, no authorization headers');
+  }
+
+  const [scheme, token] = req.headers.authorization.split(' ');
+
+  if (scheme !== 'Bearer') {
+    res.json('Invalid authorization, invalid authorization scheme');
+  }
+
+  try {
+      const payload = jwt.verify(token, process.env.JWT_KEY);
+      const encodedUser = jwt.sign(payload, process.env.JWT_KEY);
+      res.json({ jwt: encodedUser });
+  } catch (err) {
+    console.log('Error in /autoLogin', err)
   }
 });
 
